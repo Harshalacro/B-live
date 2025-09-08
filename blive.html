@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Belive - Inclusive Education Prototype</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f8ff;
+            color: #333;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .chat-container {
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            background-color: #fff;
+        }
+        .chat-log {
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            border: 1px solid #eee;
+        }
+        .message {
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 5px;
+        }
+        .user-message {
+            background-color: #e1f5fe;
+            text-align: right;
+        }
+        .bot-message {
+            background-color: #f1f8e9;
+        }
+        .input-container {
+            display: flex;
+            gap: 1rem;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 0.5rem 1rem;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .voice-status {
+            margin-top: 1rem;
+            font-weight: bold;
+        }
+        .hero-image {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .access-buttons {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        .assignment-section {
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: #e8f5e8;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Belive: Inclusive Education Platform Prototype</h1>
+        <p>Designed for children with special needs, featuring voice-controlled AI chatbot for study modules.</p>
+    </header>
+    <div class="container">
+        <div class="hero-image">
+            <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/2f026056-2b2a-4343-b530-b1346ee21dc8.png" alt="Vibrant interactive learning environment with diverse children using technology and educational tools in a colorful classroom setting with accessible devices" />
+        </div>
+        <div class="access-buttons">
+            <button id="speak-btn" onclick="speakText()">Read Aloud</button>
+            <button onclick="enableVoiceCommand()">Enable Voice Commands</button>
+            <div class="voice-status" id="voice-status">Voice Commands: Disabled</div>
+        </div>
+        <h2>AI Chatbot for Study Modules</h2>
+        <div class="chat-container">
+            <div class="chat-log" id="chat-log">
+                <div class="message bot-message">Hello! I am your AI study assistant. Ask me about any subject, like 'Math basics' or 'Science facts', and I'll provide a study module. You can also say 'ZOOM' for virtual classroom or 'ASSIGNMENT' for assignments.</div>
+            </div>
+            <div class="input-container">
+                <input type="text" id="user-input" placeholder="Type your message or use voice..." onkeypress="handleKeyPress(event)">
+                <button onclick="sendMessage()">Send</button>
+                <button id="voice-btn" onclick="startVoiceRecognition()">Voice</button>
+            </div>
+        </div>
+        <div class="assignment-section">
+            <h3>Sample Assignment</h3>
+            <p>Watch this video and write a short summary (or record audio).</p>
+            <video controls width="100%">
+                <source src="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <br>
+            <textarea id="assignment-text" placeholder="Enter your summary here..." rows="4" cols="50"></textarea>
+            <br>
+            <button onclick="submitAssignment()">Submit Text Assignment</button>
+            <button onclick="recordAudio()">Record Audio</button>
+        </div>
+    </div>
+    <script>
+        const chatLog = document.getElementById('chat-log');
+        const userInput = document.getElementById('user-input');
+        const voiceBtn = document.getElementById('voice-btn');
+        let recognition = null;
+        let isVoiceEnabled = false;
+
+        // Simulated AI responses based on keywords
+        function getAIResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            if (lowerMessage.includes('math')) {
+                return "Here's a Math module: Addition basics - 2 + 2 = 4. Multiplication: 3 x 3 = 9. Practice these!";
+            } else if (lowerMessage.includes('science')) {
+                return "Science module: The Earth orbits the Sun. Animals need water to survive. Ask for experiments!";
+            } else if (lowerMessage.includes('zoom')) {
+                return "Simulating virtual classroom... Joining session now. (In real app, this would open a video chat.)";
+            } else if (lowerMessage.includes('assignment')) {
+                return "Assignment: Watch the video below and summarize it in text or audio.";
+            } else {
+                return "I understand you're asking about " + message + ". Here's a general study tip: Keep practicing!";
+            }
+        }
+
+        function addMessage(text, isUser) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + (isUser ? 'user-message' : 'bot-message');
+            messageDiv.textContent = text;
+            chatLog.appendChild(messageDiv);
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (message) {
+                addMessage(message, true);
+                userInput.value = '';
+                setTimeout(() => {
+                    const response = getAIResponse(message);
+                    addMessage(response, false);
+                }, 1000);
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function startVoiceRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+
+                recognition.onstart = function() {
+                    voiceBtn.textContent = 'Listening...';
+                };
+
+                recognition.onresult = function(event) {
+                    const transcript = event.results[0][0].transcript;
+                    userInput.value = transcript;
+                    sendMessage();
+                };
+
+                recognition.onerror = function(event) {
+                    console.error('Speech recognition error:', event.error);
+                    voiceBtn.textContent = 'Voice';
+                };
+
+                recognition.onend = function() {
+                    voiceBtn.textContent = 'Voice';
+                };
+
+                recognition.start();
+            } else {
+                alert('Speech recognition not supported in this browser.');
+            }
+        }
+
+        function enableVoiceCommand() {
+            isVoiceEnabled = !isVoiceEnabled;
+            document.getElementById('voice-status').textContent = isVoiceEnabled ? 'Voice Commands: Enabled' : 'Voice Commands: Disabled';
+            if (isVoiceEnabled) {
+                voiceBtn.style.display = 'inline';
+            }
+        }
+
+        function speakText() {
+            const text = window.getSelection().toString() || 'This is a sample read-aloud feature for accessibility.';
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                speechSynthesis.speak(utterance);
+            } else {
+                alert('Text-to-speech not supported.');
+            }
+        }
+
+        function submitAssignment() {
+            const summary = document.getElementById('assignment-text').value;
+            if (summary) {
+                addMessage('Assignment submitted: ' + summary, true);
+                setTimeout(() => {
+                    addMessage('Thank you! Feedback: Well done on summarizing the video.', false);
+                }, 1000);
+            } else {
+                alert('Please enter a summary.');
+            }
+        }
+
+        function recordAudio() {
+            alert('Audio recording feature: In a full prototype, this would record and upload audio. Simulated submission complete.');
+            addMessage('Audio assignment submitted.', true);
+            setTimeout(() => {
+                addMessage('Audio feedback: Great pronunciation!', false);
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
+</content>
+</create_file>
